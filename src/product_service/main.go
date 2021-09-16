@@ -1,1 +1,9 @@
-package product_service
+package main
+
+import (
+	"./service"
+)
+
+func main()  {
+	service.SetupHandlers()
+}
