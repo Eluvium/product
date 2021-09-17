@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "target": "es2020"
+
+  },
+  "exclude": [
+    "build",
+    "scripts",
+    "acceptance-tests",
+    "webpack",
+    "jest",
+    "src/setupTests.js",
+    "node_modules",
+    "**/node_modules/*"
+  ]
+}

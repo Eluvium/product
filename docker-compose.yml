@@ -1,0 +1,83 @@
+version: "3.7"
+services:
+  nginx-proxy:
+    restart: always
+    image: nginx:latest
+    networks:
+      - "product_service"
+    links:
+      - "auth_service:auth_service"
+      - "product_service:product_service"
+      - "front:front"
+    ports:
+      - "80:80"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+  front:
+    stdin_open: true
+    build:
+      context: ./src/front/
+      dockerfile: ./Dockerfile.dev
+    networks:
+      - "product_service"
+  mysql_v4_db:
+    image: library/mysql:latest
+    command: --default-authentication-plugin=mysql_native_password --init-file /data/application/init.sql
+    volumes:
+      - db_data_v4:/var/lib/mysql
+      - ./config/mysql/init.sql:/data/application/init.sql
+    restart: always
+    networks:
+      - "product_service"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: Product
+      MYSQL_USER: user123
+      MYSQL_PASSWORD: user123
+      MYSQL_ROOT_HOST: '%'
+  user_service:
+    restart: always
+    links:
+      - "mysql_v4_db:mysql_v4_db"
+    networks:
+      - "product_service"
+    build:
+      context: ./src/user_service/
+      dockerfile: ./Dockerfile
+    environment:
+      MYSQL_HOST: "mysql_v4_db:3306"
+      MYSQL_DATABASE: Product
+      MYSQL_USER: user123
+      MYSQL_PASSWORD: user123
+  auth_service:
+    restart: always
+    links:
+      - "user_service:user_service"
+    networks:
+      - "product_service"
+    build:
+      context: ./src/auth_service/
+      dockerfile: ./Dockerfile
+    environment:
+      SALT: "salt"
+      KEY: "123123123"
+      EXPIRE: "1000000"
+  product_service:
+    restart: always
+    networks:
+      - "product_service"
+    build:
+      context: ./src/product_service/
+      dockerfile: ./Dockerfile
+    links:
+      - "mysql_v4_db:mysql_v4_db"
+    environment:
+      KEY: "123123123"
+      MYSQL_HOST: "mysql_v4_db:3306"
+      MYSQL_DATABASE: Product
+      MYSQL_USER: user123
+      MYSQL_PASSWORD: user123
+volumes:
+  db_data_v4:
+networks:
+  product_service:

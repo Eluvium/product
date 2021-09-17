@@ -1,1 +1,9 @@
-package auth_service
+package main
+
+import(
+	"./auth"
+)
+
+func main()  {
+	auth.SetupHandlers()
+}
